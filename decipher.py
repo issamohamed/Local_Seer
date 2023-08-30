@@ -11,6 +11,7 @@ import time
 
 # Function to record audio from the user and save it as "sample_audio.wav"
 def record_audio(filename, time_recorded_seconds):
+    
     # Configuration for audio recording
     CHUNK = 1024  # Number of audio frames per buffer
     FORMAT = pyaudio.paInt16  # Audio format (16-bit PCM)
@@ -32,6 +33,7 @@ def record_audio(filename, time_recorded_seconds):
 
     try:
         start_time = time.time()
+
         # Record audio until specified time
         while time.time() - start_time < time_recorded_seconds:
             data = stream.read(CHUNK)  # Read audio data in chunks
@@ -39,6 +41,7 @@ def record_audio(filename, time_recorded_seconds):
     except KeyboardInterrupt:
         print("\nRecording stopped by user.")
     finally:
+        
         # Cleanup after recording
         stream.stop_stream()  # Stop audio stream
         stream.close()  # Close audio stream
@@ -54,6 +57,7 @@ def record_audio(filename, time_recorded_seconds):
 
 # Main function begins
 def main():
+    
     # Load Whisper model
     model = whisper.load_model('base')
     
