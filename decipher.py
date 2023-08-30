@@ -9,115 +9,120 @@ import pyaudio
 import wave
 import time
 
-
-# Record audio from the user and save it as "sample_audio.wav"
+# Function to record audio from the user and save it as "sample_audio.wav"
 def record_audio(filename, time_recorded_seconds):
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 44100
+    # Configuration for audio recording
+    CHUNK = 1024  # Number of audio frames per buffer
+    FORMAT = pyaudio.paInt16  # Audio format (16-bit PCM)
+    CHANNELS = 1  # Number of audio channels (mono)
+    RATE = 44100  # Sampling rate in Hz
+
+    # Initialize PyAudio instance
     p = pyaudio.PyAudio()
+
+    # Open audio stream for recording
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
                     frames_per_buffer=CHUNK)
-    
-# Recording the user
+
     print("Recording... Press Ctrl+C to stop recording early.")
     frames = []
 
     try:
         start_time = time.time()
-       
+        # Record audio until specified time
         while time.time() - start_time < time_recorded_seconds:
-            
-            data = stream.read(CHUNK)
-            frames.append(data)
+            data = stream.read(CHUNK)  # Read audio data in chunks
+            frames.append(data)  # Append data to frames list
     except KeyboardInterrupt:
-        print("\nRecording stopped.")
+        print("\nRecording stopped by user.")
+    finally:
+        # Cleanup after recording
+        stream.stop_stream()  # Stop audio stream
+        stream.close()  # Close audio stream
+        p.terminate()  # Terminate PyAudio instance
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+        # Save recorded frames as a WAV file
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(CHANNELS)  # Set number of channels
+        wf.setsampwidth(p.get_sample_size(FORMAT))  # Set sample width
+        wf.setframerate(RATE)  # Set frame rate
+        wf.writeframes(b''.join(frames))  # Write frames to WAV file
+        wf.close()  # Close WAV file
 
-    wf = wave.open(filename, 'wb')
-    wf.setnchannels(CHANNELS)
-    wf.setsampwidth(p.get_sample_size(FORMAT))
-    wf.setframerate(RATE)
-    wf.writeframes(b''.join(frames))
-    wf.close()
-
-# Main function 
+# Main function begins
 def main():
-
+    # Load Whisper model
     model = whisper.load_model('base')
     
-
+    # Set the duration for recording
     time_recorded_seconds = 10
     run_loop = True
     while run_loop:
-        user_input = input("Press the ENTER to start recording.\nYou will have 10 seconds to talk.")
-        if user_input.lower() == '': 
-            record_audio("sample_audio.wav", time_recorded_seconds)  # Record until user presses Enter
+        user_input = input("Press ENTER to start recording.\nYou will have 10 seconds to talk.")
+        if user_input.lower() == '':
+            # Record audio until user presses Enter
+            record_audio("sample_audio.wav", time_recorded_seconds)
             run_loop = False
 
     # Load audio and pad/trim it to 30 seconds of expected input
     audio = whisper.load_audio("sample_audio.wav")
     audio = whisper.pad_or_trim(audio)
 
-    # Making log-Mel spectrogram and moving to the same device as the model
+    # Generate log-Mel spectrogram and move it to the same device as the model
     mel = whisper.log_mel_spectrogram(audio).to(model.device)
 
-    # Detecting spoken language in input
+    # Detect spoken language in input
     _, probs = model.detect_language(mel)
     print(f"Detected Language: {max(probs, key=probs.get)}")
 
-    # Decoding the audio
+    # Decode the audio
     options = whisper.DecodingOptions(fp16=False)
     result = whisper.decode(model, mel, options)
 
-    # Printing the recognized text
+    # Get recognized text
     audio_txt = result.text
     print(audio_txt)
 
-    # Reading API key from the file
+    # Read API key from the file
     with open('hidden_key.txt', 'r') as key_file:
         api_key = key_file.read().strip()
 
-    # Setting up OpenAI API key
+    # Set up OpenAI API key
     openai.api_key = api_key
 
-    # Creating conversation with initial system message
+    # Create conversation with initial system message
     messages = [
         {"role": "system", "content": "You are a kind wizard of vast wisdom"
           "named 'Seer', who summarizes question and statements made from 'audio.txt'"
           "while concisely replying in 2-3 sentences."}, 
     ]
 
-    # Adding user's transcription to the conversation
+    # Add user's transcription to the conversation
     messages.append(
         {"role": "user", "content": audio_txt},
     )
 
-    # Sending conversation to OpenAI
+    # Send conversation to OpenAI
     chat = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages
     )
 
-    # Receiving and printing assistant's reply
+    # Get assistant's reply
     reply = chat.choices[0].message.content
     print(f"\nSeer: {reply}")
 
-    # Appending assistant's reply to the conversation
+    # Append assistant's reply to the conversation
     messages.append({"role": "assistant", "content": reply})
 
-    # Setting speech for Seer's reply
+    # Set up speech for Seer's reply
     language = "en"
     speech = gTTS(text=reply, lang=language, slow=False, tld="ca")
     speech.save("seer_reply.wav")
 
-    # Loading Seer's reply audio file
+    # Load Seer's reply audio file
     audio = AudioSegment.from_file("seer_reply.wav")
     audio_duration = len(audio) / 1000  # Convert milliseconds to seconds
 
@@ -135,6 +140,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
