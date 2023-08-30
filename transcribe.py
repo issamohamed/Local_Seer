@@ -44,7 +44,7 @@ messages.append(
     {"role": "user", "content": audio_txt},
 )
 
-# Sending conversation to ChatGPT
+# Sending conversation to OpenAI
 chat = openai.ChatCompletion.create(
     model="gpt-3.5-turbo", messages=messages
 )
