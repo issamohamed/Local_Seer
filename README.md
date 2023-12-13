@@ -1,4 +1,4 @@
-# Seer
+REQUIREMENTS TO RUN:
 pip install whisper openai gtts pydub portaudio pyaudio
 
 
