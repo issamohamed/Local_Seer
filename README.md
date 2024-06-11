@@ -1,4 +1,4 @@
-REQUIREMENTS TO RUN:
+REQUIREMENTS TO RUN AFTER DOWNLOADING ALL THE FILES ABOVE:
 pip install whisper openai gtts pydub portaudio pyaudio
 
 
