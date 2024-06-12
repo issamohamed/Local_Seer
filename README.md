@@ -2,6 +2,10 @@ REQUIREMENTS TO RUN AFTER DOWNLOADING ALL THE FILES ABOVE:
 pip install whisper openai gtts pydub portaudio pyaudio
 
 
-![main_seer](https://github.com/issamohamed/Seer/assets/48192737/ab7495b4-057d-450a-abfa-75513e8c7296)
+
+
+
+https://github.com/issamohamed/Local_Seer/assets/48192737/af901b50-c8d8-46a5-99b6-95e5a07c3a28
+
 
 
